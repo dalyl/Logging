@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Microsoft.Extensions.Logging.Internal
 {
@@ -19,13 +20,14 @@ namespace Microsoft.Extensions.Logging.Internal
         private readonly LogValuesFormatter _formatter;
         private readonly object[] _values;
         private readonly string _originalMessage;
+        private static int _count;
         private const int MaxCachedFormatters = 1024;
 
         public FormattedLogValues(string format, params object[] values)
         {
             if (values?.Length != 0 && format != null)
             {
-                if (_formatters.Count >= MaxCachedFormatters)
+                if (_count >= MaxCachedFormatters)
                 {
                     if (!_formatters.TryGetValue(format, out _formatter))
                     {
@@ -34,7 +36,11 @@ namespace Microsoft.Extensions.Logging.Internal
                 }
                 else
                 {
-                    _formatter = _formatters.GetOrAdd(format, f => new LogValuesFormatter(f));
+                    _formatter = _formatters.GetOrAdd(format, f =>
+                    {
+                        Interlocked.Increment(ref _count);
+                        return new LogValuesFormatter(f);
+                    });
                 }
             }
 
