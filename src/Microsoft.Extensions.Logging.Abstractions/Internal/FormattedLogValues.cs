@@ -15,13 +15,13 @@ namespace Microsoft.Extensions.Logging.Internal
     /// </summary>
     public class FormattedLogValues : IReadOnlyList<KeyValuePair<string, object>>
     {
+        private const int MaxCachedFormatters = 1024;
         private const string NullFormat = "[null]";
+        private static int _count;
         private static ConcurrentDictionary<string, LogValuesFormatter> _formatters = new ConcurrentDictionary<string, LogValuesFormatter>();
         private readonly LogValuesFormatter _formatter;
         private readonly object[] _values;
         private readonly string _originalMessage;
-        private static int _count;
-        private const int MaxCachedFormatters = 1024;
 
         public FormattedLogValues(string format, params object[] values)
         {
