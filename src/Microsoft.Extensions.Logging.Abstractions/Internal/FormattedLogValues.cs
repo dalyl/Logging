@@ -24,13 +24,7 @@ namespace Microsoft.Extensions.Logging.Internal
         private readonly string _originalMessage;
 
         // for testing purposes
-        internal LogValuesFormatter Formatter
-        {
-            get
-            {
-                return _formatter;
-            }
-        }
+        internal LogValuesFormatter Formatter => _formatter;
 
         public FormattedLogValues(string format, params object[] values)
         {
