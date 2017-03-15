@@ -19,9 +19,18 @@ namespace Microsoft.Extensions.Logging.Internal
         private const string NullFormat = "[null]";
         private static int _count;
         private static ConcurrentDictionary<string, LogValuesFormatter> _formatters = new ConcurrentDictionary<string, LogValuesFormatter>();
-        internal readonly LogValuesFormatter Formatter;
+        private readonly LogValuesFormatter _formatter;
         private readonly object[] _values;
         private readonly string _originalMessage;
+
+        // for testing purposes
+        internal LogValuesFormatter Formatter
+        {
+            get
+            {
+                return _formatter;
+            }
+        }
 
         public FormattedLogValues(string format, params object[] values)
         {
@@ -29,14 +38,14 @@ namespace Microsoft.Extensions.Logging.Internal
             {
                 if (_count >= MaxCachedFormatters)
                 {
-                    if (!_formatters.TryGetValue(format, out Formatter))
+                    if (!_formatters.TryGetValue(format, out _formatter))
                     {
-                        Formatter = new LogValuesFormatter(format);
+                        _formatter = new LogValuesFormatter(format);
                     }
                 }
                 else
                 {
-                    Formatter = _formatters.GetOrAdd(format, f =>
+                    _formatter = _formatters.GetOrAdd(format, f =>
                     {
                         Interlocked.Increment(ref _count);
                         return new LogValuesFormatter(f);
@@ -62,7 +71,7 @@ namespace Microsoft.Extensions.Logging.Internal
                     return new KeyValuePair<string, object> ("{OriginalFormat}", _originalMessage);
                 }
 
-                return Formatter.GetValue(_values, index);
+                return _formatter.GetValue(_values, index);
             }
         }
 
@@ -70,12 +79,12 @@ namespace Microsoft.Extensions.Logging.Internal
         {
             get
             {
-                if (Formatter == null)
+                if (_formatter == null)
                 {
                     return 1;
                 }
 
-                return Formatter.ValueNames.Count + 1;
+                return _formatter.ValueNames.Count + 1;
             }
         }
 
@@ -89,12 +98,12 @@ namespace Microsoft.Extensions.Logging.Internal
 
         public override string ToString()
         {
-            if (Formatter == null)
+            if (_formatter == null)
             {
                 return _originalMessage;
             }
 
-            return Formatter.Format(_values);
+            return _formatter.Format(_values);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
